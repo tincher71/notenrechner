@@ -1,0 +1,569 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; connect-src 'none'; object-src 'none'"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Notenrechner"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#e8f1ec"><title>Frau Zimnols Notenrechner</title><style>
+    :root {
+      --bg: #f3f7f5;
+      --bg-2: #e8f1ec;
+      --paper: rgba(255,255,255,.78);
+      --paper-strong: rgba(255,255,255,.96);
+      --ink: #13251d;
+      --muted: #64756d;
+      --line: rgba(25, 72, 51, .10);
+      --accent: #0f9d58;
+      --accent-2: #42b883;
+      --accent-3: #d9f4e7;
+      --shadow: 0 24px 60px rgba(20, 54, 39, .10);
+      --radius: 26px;
+      --good: #17a95e;
+      --warn: #d79b1f;
+      --bad: #d04a4a;
+      --metric-name-size: .8rem;
+      --text-size: 1rem;
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: light dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: var(--text-size);
+      background:
+        radial-gradient(circle at top left, rgba(66,184,131,.18), transparent 30rem),
+        radial-gradient(circle at 100% 0%, rgba(15,157,88,.10), transparent 24rem),
+        linear-gradient(180deg, #f8fbf9 0%, var(--bg) 38%, var(--bg-2) 100%);
+      transition: background .25s ease, color .25s ease;
+    }
+    body.dark {
+      --bg: #0f1713;
+      --bg-2: #17221c;
+      --paper: rgba(18, 28, 23, .86);
+      --paper-strong: rgba(24, 36, 29, .96);
+      --ink: #eff8f3;
+      --muted: #a5bbb0;
+      --line: rgba(180, 226, 198, .12);
+      --accent: #2bc777;
+      --accent-2: #5dd39e;
+      --accent-3: rgba(43, 199, 119, .12);
+      --shadow: 0 24px 60px rgba(0,0,0,.28);
+      --good: #56df98;
+      --warn: #ffce66;
+      --bad: #ff7d7d;
+      background:
+        radial-gradient(circle at top left, rgba(43,199,119,.12), transparent 26rem),
+        radial-gradient(circle at 100% 0%, rgba(93,211,158,.08), transparent 24rem),
+        linear-gradient(180deg, #0d1511 0%, var(--bg) 38%, var(--bg-2) 100%);
+    }
+    .wrap {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 42px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.35rem);
+      line-height: .98;
+      letter-spacing: -0.05em;
+      white-space: nowrap;
+    }
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 1200px;
+      white-space: nowrap;
+    }
+    .privacy {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 10px;
+      margin: 18px 0 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .privacy::-webkit-scrollbar { display: none; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.62);
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .88rem;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    body.dark .pill { background: rgba(26,39,31,.7); }
+    .dot { width: 8px; height: 8px; background: var(--good); border-radius: 999px; display: inline-block; }
+    main { display: grid; gap: 18px; }
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) repeat(4, max-content);
+      gap: 12px;
+      padding: 18px;
+      align-items: end;
+      overflow-x: auto;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 700;
+      font-size: .95rem;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    label span {
+      color: var(--muted);
+      font-weight: 650;
+      font-size: .82rem;
+      white-space: nowrap;
+    }
+    select, input, button {
+      font: inherit;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+    select, input {
+      width: 100%;
+      border: 1px solid rgba(19, 37, 29, .08);
+      border-radius: 16px;
+      background: var(--paper-strong);
+      color: var(--ink);
+      padding: 12px 14px;
+      outline: none;
+      min-height: 48px;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    body.dark select, body.dark input { border-color: rgba(180,226,198,.10); }
+    select:focus, input:focus {
+      border-color: rgba(15,157,88,.45);
+      box-shadow: 0 0 0 4px rgba(66,184,131,.14);
+    }
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 13px 16px;
+      min-height: 48px;
+      font-weight: 800;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 24px rgba(15,157,88,.20);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+      white-space: nowrap;
+    }
+    button.secondary {
+      color: var(--ink);
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    body.dark button.secondary { background: rgba(24,36,29,.96); }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    #gTotal, #gEarned, #eTotal, #eEarned {
+      font-size: clamp(1.2rem, 2.2vw, 1.8rem) !important;
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    .courses { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .course { padding: 22px; }
+    .course h2 { margin: 0 0 16px; font-size: 1.35rem; letter-spacing: -.02em; white-space: nowrap; }
+    .course-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .results {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+    }
+    .metric {
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(19,37,29,.07);
+      border-radius: 20px;
+      padding: 14px;
+      min-height: 100px;
+      min-width: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    body.dark .metric { background: rgba(24,36,29,.78); border-color: rgba(180,226,198,.08); }
+    .metric .name {
+      color: var(--muted);
+      font-weight: 750;
+      font-size: var(--metric-name-size);
+      margin-bottom: 8px;
+      white-space: nowrap;
+    }
+    .metric .value {
+      font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -.03em;
+      white-space: nowrap;
+    }
+    .metric .small { font-size: 1.15rem; white-space: nowrap; }
+    .empty { color: #89a096; }
+    .error { color: var(--bad); font-weight: 800; margin-top: 12px; min-height: 1.2em; white-space: nowrap; overflow-x: auto; }
+    .bar { height: 10px; background: rgba(15,157,88,.12); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #8fe2b9, var(--accent));
+      border-radius: inherit;
+      transition: width .18s ease;
+    }
+    details { padding: 0; overflow: hidden; }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 18px 22px;
+      font-weight: 900;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      white-space: nowrap;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "öffnen"; color: var(--muted); font-weight: 700; font-size: .9rem; }
+    details[open] summary::after { content: "schließen"; }
+    .key-body { border-top: 1px solid var(--line); padding: 18px 22px 22px; }
+    .key-note { color: var(--muted); margin: 0 0 14px; white-space: nowrap; overflow-x: auto; }
+    .table-wrap { overflow-x: auto; border: 1px solid rgba(19,37,29,.08); border-radius: 20px; background: rgba(255,255,255,.78); }
+    body.dark .table-wrap { background: rgba(24,36,29,.78); border-color: rgba(180,226,198,.08); }
+    table { width: 100%; border-collapse: collapse; min-width: 920px; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(19,37,29,.08); text-align: left; white-space: nowrap; }
+    body.dark th, body.dark td { border-bottom-color: rgba(180,226,198,.08); }
+    th { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; background: rgba(15,157,88,.05); }
+    td input, td select { min-height: 38px; border-radius: 12px; padding: 8px 9px; }
+    tr:last-child td { border-bottom: none; }
+    .footer-actions { display: flex; gap: 10px; flex-wrap: nowrap; margin-top: 14px; overflow-x: auto; }
+    footer { color: var(--muted); font-size: .88rem; margin-top: 18px; text-align: center; white-space: nowrap; overflow-x: auto; }
+    @keyframes blink {
+      0%, 45%, 47%, 100% { transform: scaleY(1); }
+      46% { transform: scaleY(0.15); }
+    }
+    @keyframes floatFace {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes floatFaceSad {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
+    }
+    @keyframes celebrate {
+      0%, 100% { box-shadow: inset 0 -8px 16px rgba(0,0,0,.08), 0 12px 24px rgba(255,201,61,.20); }
+      50% { box-shadow: inset 0 -8px 16px rgba(0,0,0,.08), 0 16px 32px rgba(255,201,61,.32); }
+    }
+    @keyframes shakeFace {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-2px) rotate(-2deg); }
+      40% { transform: translateX(2px) rotate(2deg); }
+      60% { transform: translateX(-2px) rotate(-2deg); }
+      80% { transform: translateX(2px) rotate(2deg); }
+    }
+    @media (max-width: 1200px) {
+      .wrap { width: min(100% - 20px, 1480px); }
+      .toolbar { grid-template-columns: minmax(260px, 1fr) repeat(4, max-content); }
+    }
+    @media (max-width: 980px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar label { grid-column: 1 / -1; }
+      .courses { grid-template-columns: 1fr; }
+      .course-top { grid-template-columns: 1fr; }
+      .results { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      .subtitle, h1 { white-space: normal; }
+    }
+    @media (max-width: 560px) {
+      header { grid-template-columns: 1fr; }
+      .toolbar, .input-grid, .results { grid-template-columns: 1fr; }
+      button { width: 100%; }
+      .privacy, .footer-actions { flex-wrap: nowrap; }
+      .metric .name, .metric .value, label, label span, .course h2 { white-space: normal; }
+      .error, .subtitle, footer, .key-note, h1 { white-space: normal; }
+    }
+    @media print {
+      body { background: white; color: #111; }
+      .wrap { width: 100%; padding: 0; }
+      .toolbar button, details, footer, .privacy { display: none; }
+      .panel { box-shadow: none; break-inside: avoid; }
+    }
+    /* Responsive Feinschliff: Laptop, iPad/Tablet und Smartphone */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { min-width: 0; }
+    input, select, button { max-width: 100%; }
+    .wrap {
+      width: min(100% - clamp(16px, 4vw, 48px), 1480px) !important;
+      padding-top: clamp(14px, 3vw, 32px) !important;
+      padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+    }
+    h1 { font-size: clamp(1.7rem, 2.6vw, 3.05rem) !important; line-height: 1.05 !important; }
+    .panel { border-radius: clamp(18px, 2.5vw, 34px) !important; }
+    .toolbar { gap: clamp(10px, 1.6vw, 16px) !important; }
+    .courses { gap: clamp(14px, 2vw, 22px) !important; }
+    .course { padding: clamp(16px, 2.2vw, 24px) !important; }
+    .course-top { gap: clamp(12px, 2vw, 20px) !important; }
+    .input-grid, .results { gap: clamp(10px, 1.6vw, 16px) !important; }
+    /* Laptop/Desktop: beide Kurse nebeneinander */
+    @media (min-width: 1181px) {
+      .courses { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .course-top { grid-template-columns: minmax(0, 1fr) minmax(190px, 230px) !important; }
+      .results { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+    /* iPad/Tablet quer und kleine Laptops: Kurse untereinander, Eingaben + Bild nebeneinander */
+    @media (min-width: 761px) and (max-width: 1180px) {
+      .courses { grid-template-columns: 1fr !important; }
+      .course-top { grid-template-columns: minmax(0, 1fr) minmax(210px, 270px) !important; align-items: stretch !important; }
+      .input-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .results { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    }
+    /* iPad hochkant / große Smartphones: alles sauber untereinander */
+    @media (min-width: 561px) and (max-width: 760px) {
+      header { grid-template-columns: 1fr !important; }
+      .toolbar { grid-template-columns: 1fr 1fr !important; }
+      .toolbar label { grid-column: 1 / -1 !important; }
+      .courses, .course-top { grid-template-columns: 1fr !important; }
+      .input-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .results { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+    /* Smartphone: einspaltig, größere Touch-Flächen, kein seitliches Scrollen */
+    @media (max-width: 560px) {
+      .wrap { width: min(100% - 20px, 100%) !important; padding-top: 12px !important; }
+      header { grid-template-columns: 1fr !important; gap: 14px !important; }
+      .brand { align-items: center !important; }
+      .logo { width: 54px !important; height: 54px !important; }
+      .toolbar, .courses, .course-top, .input-grid, .results { grid-template-columns: 1fr !important; }
+      .toolbar { padding: 12px !important; }
+      .toolbar button, .toolbar select, .toolbar input { min-height: 48px !important; }
+      .course h2 { font-size: 1.18rem !important; white-space: normal !important; }
+      label { min-width: 0 !important; }
+      .big-input { font-size: clamp(2rem, 12vw, 3.3rem) !important; }
+      .metric .value { font-size: clamp(1.35rem, 8vw, 2.1rem) !important; }
+      details { overflow-x: auto !important; }
+      table { min-width: 640px !important; }
+    }
+    /* Sehr schmale iPhones */
+    @media (max-width: 380px) {
+      .wrap { width: min(100% - 14px, 100%) !important; }
+      .course { padding: 13px !important; }
+    }
+.course-top {
+      grid-template-columns: 1fr !important;
+    }
+    header {
+      grid-template-columns: 1fr !important;
+    }
+    .course-top {
+      grid-template-columns: 1fr !important;
+    }
+  </style></head><body><div class="wrap"><header><div><h1>Frau Zimnols Notenrechner</h1></div></header><main><section class="panel toolbar" aria-label="Globale Einstellungen"><label>Notenart
+          <span>entspricht der Auswahl im Excel-Feld „Notenart“</span><select id="gradeSet"></select></label><button type="button" id="exampleBtn">Beispielwerte</button><button type="button" class="secondary" id="clearBtn">Leeren</button><button type="button" class="secondary" id="themeBtn" aria-pressed="false">Dark Mode</button></section><section class="courses" aria-live="polite"><article class="panel course" data-course="g"><h2>G-Kurs</h2><div class="course-top"><div class="input-grid"><label>Gesamtpunkte
+                <span>maximal erreichbare Punkte</span><input id="gTotal" inputmode="decimal" autocomplete="off" value="45"></label><label>Erreichte Punkte
+                <span>tatsächlich erreichte Punkte</span><input id="gEarned" inputmode="decimal" autocomplete="off" value="44"></label></div></div><div class="results"><div class="metric"><div class="name">Prozent</div><div class="value" id="gPercent">–</div></div><div class="metric"><div class="name">Note: Text</div><div class="value small" id="gText">–</div></div><div class="metric"><div class="name">Note: Ganzzahl</div><div class="value" id="gInteger">–</div></div><div class="metric"><div class="name">Note: Dezimalzahl</div><div class="value" id="gDecimal">–</div></div></div><div class="bar" aria-hidden="true"><i id="gBar"></i></div><div class="error" id="gError" role="status"></div></article><article class="panel course" data-course="e"><h2>E-Kurs</h2><div class="course-top"><div class="input-grid"><label>Gesamtpunkte
+                <span>maximal erreichbare Punkte</span><input id="eTotal" inputmode="decimal" autocomplete="off" value="60"></label><label>Erreichte Punkte
+                <span>tatsächlich erreichte Punkte</span><input id="eEarned" inputmode="decimal" autocomplete="off" value="28"></label></div></div><div class="results"><div class="metric"><div class="name">Prozent</div><div class="value" id="ePercent">–</div></div><div class="metric"><div class="name">Note: Text</div><div class="value small" id="eText">–</div></div><div class="metric"><div class="name">Note: Ganzzahl</div><div class="value" id="eInteger">–</div></div><div class="metric"><div class="name">Note: Dezimalzahl</div><div class="value" id="eDecimal">–</div></div></div><div class="bar" aria-hidden="true"><i id="eBar"></i></div><div class="error" id="eError" role="status"></div></article></section><details class="panel"><summary>Notenschlüssel temporär ansehen oder ändern</summary><div class="key-body"><p class="key-note">Die Tabelle ist aus dem Excel-Blatt „NOTENSCHLÜSSEL“ übernommen. Änderungen gelten nur bis zum Neuladen der Datei; es wird nichts gespeichert.</p><div class="table-wrap"><table id="gradeTable"><thead><tr><th>SetName</th><th>Ab Prozent</th><th>Note Ganzzahl</th><th>Notentext</th><th>Numerischer Wert</th></tr></thead><tbody></tbody></table></div><div class="footer-actions"><button type="button" class="secondary" id="resetKeysBtn">Notenschlüssel zurücksetzen</button></div></div></details></main></div><script>
+  (() => {
+    'use strict';
+    const DEFAULT_GRADES = [{"setName":"Noten 1-6","abProzent":0.0,"noteGanzzahl":"6","notentext":"ungenügend","numerischerWert":6.0},{"setName":"Noten 1-6","abProzent":0.18,"noteGanzzahl":"5","notentext":"mangelhaft","numerischerWert":5.0},{"setName":"Noten 1-6","abProzent":0.45,"noteGanzzahl":"4","notentext":"ausreichend","numerischerWert":4.0},{"setName":"Noten 1-6","abProzent":0.59,"noteGanzzahl":"3","notentext":"befriedigend","numerischerWert":3.0},{"setName":"Noten 1-6","abProzent":0.73,"noteGanzzahl":"2","notentext":"gut","numerischerWert":2.0},{"setName":"Noten 1-6","abProzent":0.87,"noteGanzzahl":"1","notentext":"sehr gut","numerischerWert":1.0},{"setName":"Noten 1-6 +/-","abProzent":0.0,"noteGanzzahl":"6-","notentext":"ungenügend -","numerischerWert":6.3},{"setName":"Noten 1-6 +/-","abProzent":0.0567,"noteGanzzahl":"6","notentext":"ungenügend","numerischerWert":6.0},{"setName":"Noten 1-6 +/-","abProzent":0.1133,"noteGanzzahl":"6+","notentext":"ungenügend +","numerischerWert":5.7},{"setName":"Noten 1-6 +/-","abProzent":0.18,"noteGanzzahl":"5-","notentext":"mangelhaft -","numerischerWert":5.3},{"setName":"Noten 1-6 +/-","abProzent":0.2667,"noteGanzzahl":"5","notentext":"mangelhaft","numerischerWert":5.0},{"setName":"Noten 1-6 +/-","abProzent":0.533,"noteGanzzahl":"5+","notentext":"mangelhaft +","numerischerWert":4.7},{"setName":"Noten 1-6 +/-","abProzent":0.45,"noteGanzzahl":"4-","notentext":"ausreichend -","numerischerWert":4.3},{"setName":"Noten 1-6 +/-","abProzent":0.4933,"noteGanzzahl":"4","notentext":"ausreichend","numerischerWert":4.0},{"setName":"Noten 1-6 +/-","abProzent":0.5367,"noteGanzzahl":"4+","notentext":"ausreichend +","numerischerWert":3.7},{"setName":"Noten 1-6 +/-","abProzent":0.59,"noteGanzzahl":"3-","notentext":"befriedigend -","numerischerWert":3.3},{"setName":"Noten 1-6 +/-","abProzent":0.6333,"noteGanzzahl":"3","notentext":"befriedigend","numerischerWert":3.0},{"setName":"Noten 1-6 +/-","abProzent":0.6767,"noteGanzzahl":"3+","notentext":"befriedigend +","numerischerWert":2.7},{"setName":"Noten 1-6 +/-","abProzent":0.73,"noteGanzzahl":"2-","notentext":"gut -","numerischerWert":2.3},{"setName":"Noten 1-6 +/-","abProzent":0.7733,"noteGanzzahl":"2","notentext":"gut","numerischerWert":2.0},{"setName":"Noten 1-6 +/-","abProzent":0.8167,"noteGanzzahl":"2+","notentext":"gut +","numerischerWert":1.7},{"setName":"Noten 1-6 +/-","abProzent":0.87,"noteGanzzahl":"1-","notentext":"sehr gut -","numerischerWert":1.3},{"setName":"Noten 1-6 +/-","abProzent":0.9133,"noteGanzzahl":"1","notentext":"sehr gut","numerischerWert":1.0},{"setName":"Noten 1-6 +/-","abProzent":0.97,"noteGanzzahl":"1+","notentext":"sehr gut +","numerischerWert":0.7}];
+    const cloneGrades = () => DEFAULT_GRADES.map(row => ({ ...row }));
+    let gradeRows = cloneGrades();
+    const $ = (id) => document.getElementById(id);
+    const fields = ['gTotal', 'gEarned', 'eTotal', 'eEarned'];
+    const nfPercent = new Intl.NumberFormat('de-DE', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const nfNumber = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
+    const nfDecimal = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    function parseGermanNumber(value) {
+      if (typeof value !== 'string') return NaN;
+      const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
+      if (normalized === '') return NaN;
+      return Number(normalized);
+    }
+    function formatThreshold(value) {
+      return nfPercent.format(Number(value));
+    }
+    function uniqueSets() {
+      return [...new Set(gradeRows.map(row => row.setName))].sort((a, b) => a.localeCompare(b, 'de'));
+    }
+    function fillGradeSetOptions() {
+      const select = $('gradeSet');
+      const current = select.value || 'Noten 1-6';
+      select.innerHTML = '';
+      for (const setName of uniqueSets()) {
+        const option = document.createElement('option');
+        option.value = setName;
+        option.textContent = setName;
+        select.appendChild(option);
+      }
+      select.value = uniqueSets().includes(current) ? current : uniqueSets()[0];
+    }
+    function lookupGrade(setName, percent) {
+      const rows = gradeRows.filter(row => row.setName === setName);
+      if (!Number.isFinite(percent) || rows.length === 0) return null;
+      let best = null;
+      for (const row of rows) {
+        const threshold = Number(row.abProzent);
+        if (Number.isFinite(threshold) && percent >= threshold && (!best || threshold > Number(best.abProzent))) {
+          best = row;
+        }
+      }
+      return best;
+    }
+    function showEmpty(prefix) {
+      $(`${prefix}Percent`).textContent = '–';
+      $(`${prefix}Text`).textContent = '–';
+      $(`${prefix}Integer`).textContent = '–';
+      $(`${prefix}Decimal`).textContent = '–';
+      $(`${prefix}Bar`).style.width = '0%';
+    }
+    function setError(prefix, message) {
+      $(`${prefix}Error`).textContent = message || '';
+    }
+    function calculate(prefix) {
+      const totalRaw = $(`${prefix}Total`).value;
+      const earnedRaw = $(`${prefix}Earned`).value;
+      const totalEmpty = totalRaw.trim() === '';
+      const earnedEmpty = earnedRaw.trim() === '';
+      if (totalEmpty || earnedEmpty) {
+        showEmpty(prefix);
+        setError(prefix, '');
+        return;
+      }
+      const total = parseGermanNumber(totalRaw);
+      const earned = parseGermanNumber(earnedRaw);
+      if (!Number.isFinite(total) || !Number.isFinite(earned)) {
+        showEmpty(prefix);
+        setError(prefix, 'Bitte gültige Zahlen eingeben. Komma oder Punkt sind möglich.');
+        return;
+      }
+      if (total <= 0) {
+        showEmpty(prefix);
+        setError(prefix, 'Gesamtpunkte müssen größer als 0 sein.');
+        return;
+      }
+      if (earned < 0) {
+        showEmpty(prefix);
+        setError(prefix, 'Erreichte Punkte dürfen nicht negativ sein.');
+        return;
+      }
+      const percent = earned / total;
+      const grade = lookupGrade($('gradeSet').value, percent);
+      $(`${prefix}Percent`).textContent = nfPercent.format(percent);
+      $(`${prefix}Text`).textContent = grade ? grade.notentext : '–';
+      $(`${prefix}Integer`).textContent = grade ? grade.noteGanzzahl : '–';
+      $(`${prefix}Decimal`).textContent = grade ? nfDecimal.format(Number(grade.numerischerWert)) : '–';
+      $(`${prefix}Bar`).style.width = `${Math.max(0, Math.min(percent, 1)) * 100}%`;
+      if (earned > total) {
+        setError(prefix, `Hinweis: ${nfNumber.format(earned)} von ${nfNumber.format(total)} Punkten sind mehr als 100%. Die Excel-Logik gibt dann die beste passende Note zurück.`);
+      } else {
+        setError(prefix, '');
+      }
+    }
+    function recalc() {
+      calculate('g');
+      calculate('e');
+    }
+    function renderGradeTable() {
+      const tbody = $('gradeTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      gradeRows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><select data-field="setName" data-index="${index}"></select></td><td><input data-field="abProzent" data-index="${index}" value="${formatThreshold(row.abProzent)}" inputmode="decimal"></td><td><input data-field="noteGanzzahl" data-index="${index}" value="${escapeHtml(row.noteGanzzahl)}"></td><td><input data-field="notentext" data-index="${index}" value="${escapeHtml(row.notentext)}"></td><td><input data-field="numerischerWert" data-index="${index}" value="${String(row.numerischerWert).replace('.', ',')}" inputmode="decimal"></td>`;
+        tbody.appendChild(tr);
+        const select = tr.querySelector('select');
+        for (const setName of uniqueSets()) {
+          const option = document.createElement('option');
+          option.value = setName;
+          option.textContent = setName;
+          select.appendChild(option);
+        }
+        select.value = row.setName;
+      });
+    }
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    function updateGradeRow(event) {
+      const target = event.target;
+      if (!target.matches('[data-field]')) return;
+      const index = Number(target.dataset.index);
+      const field = target.dataset.field;
+      if (!gradeRows[index]) return;
+      if (field === 'abProzent') {
+        let v = parseGermanNumber(target.value.replace('%', ''));
+        if (Number.isFinite(v) && v > 1) v = v / 100;
+        if (Number.isFinite(v)) gradeRows[index][field] = v;
+      } else if (field === 'numerischerWert') {
+        const v = parseGermanNumber(target.value);
+        if (Number.isFinite(v)) gradeRows[index][field] = v;
+      } else {
+        gradeRows[index][field] = target.value;
+      }
+      fillGradeSetOptions();
+      recalc();
+    }
+    function installEvents() {
+      $('gradeSet').addEventListener('change', recalc);
+      for (const id of fields) $(id).addEventListener('input', recalc);
+      $('exampleBtn').addEventListener('click', () => {
+        $('gradeSet').value = 'Noten 1-6';
+        $('gTotal').value = '45';
+        $('gEarned').value = '44';
+        $('eTotal').value = '60';
+        $('eEarned').value = '28';
+        recalc();
+      });
+      $('clearBtn').addEventListener('click', () => {
+        for (const id of fields) $(id).value = '';
+        recalc();
+      });
+      $('themeBtn').addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        const dark = document.body.classList.contains('dark');
+        $('themeBtn').textContent = dark ? 'Light Mode' : 'Dark Mode';
+        $('themeBtn').setAttribute('aria-pressed', String(dark));
+      });
+      $('gradeTable').addEventListener('input', updateGradeRow);
+      $('gradeTable').addEventListener('change', updateGradeRow);
+      $('resetKeysBtn').addEventListener('click', () => {
+        gradeRows = cloneGrades();
+        fillGradeSetOptions();
+        renderGradeTable();
+        recalc();
+      });
+    }
+    fillGradeSetOptions();
+    renderGradeTable();
+    installEvents();
+    recalc();
+  })();
+  </script></body></html>
